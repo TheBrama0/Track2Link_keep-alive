@@ -11,12 +11,10 @@ jobs:
     strategy:
       matrix:
         project:
-          - name: project-alpha
+          - name: Track2Link
             ref: clfndnqtihioqheubzmx   # <-- REPLACE with your actual project ref
-            secret_name: PROJECT_ALPHA_ANON_KEY
-          - name: project-beta
-            ref: nopqrstuvwxyz           # <-- REPLACE with your second project ref
-            secret_name: PROJECT_BETA_ANON_KEY
+            secret_name: sb_publishable_4DOkH5Ljp_tReIiIadWYDw_p7ksAg0v
+          - 
           # Add more projects as needed
     steps:
       - name: Call ping_keep_alive for ${{ matrix.project.name }}
