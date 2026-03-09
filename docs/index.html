@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Keep‑Alive Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .project { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        .ok { color: green; }
+        .time { font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Supabase Keep‑Alive Dashboard</h1>
+    <div id="projects"></div>
+
+    <script>
+        // List your projects here – add as many as you like
+        const projects = [
+            { name: 'Track2Link', ref: 'https://clfndnqtihioqheubzmx.supabase.co', anonKey: 'sb_publishable_4DOkH5Ljp_tReIiIadWYDw_p7ksAg0v' },
+            
+        ];
+
+        async function fetchStatus(project) {
+            const url = `https://${project.ref}.supabase.co/rest/v1/keep_alive?select=last_ping,uptime_days`;
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': project.anonKey,
+                        'Authorization': `Bearer ${project.anonKey}`
+                    }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                return data[0]; // there's only one row
+            } catch (err) {
+                console.error(`Failed to fetch ${project.name}:`, err);
+                return null;
+            }
+        }
+
+        async function displayAll() {
+            const container = document.getElementById('projects');
+            container.innerHTML = '<p>Loading...</p>';
+            const htmlParts = [];
+            for (const proj of projects) {
+                const status = await fetchStatus(proj);
+                if (status) {
+                    const lastPing = new Date(status.last_ping).toLocaleString();
+                    htmlParts.push(`
+                        <div class="project">
+                            <h2>${proj.name}</h2>
+                            <p class="ok">✅ Active</p>
+                            <p>Last ping: <span class="time">${lastPing}</span></p>
+                            <p>Uptime days: ${status.uptime_days}</p>
+                        </div>
+                    `);
+                } else {
+                    htmlParts.push(`
+                        <div class="project">
+                            <h2>${proj.name}</h2>
+                            <p style="color:red;">❌ Unreachable</p>
+                        </div>
+                    `);
+                }
+            }
+            container.innerHTML = htmlParts.join('');
+        }
+
+        displayAll();
+        // Optionally refresh every minute
+        // setInterval(displayAll, 60000);
+    </script>
+</body>
+</html>
