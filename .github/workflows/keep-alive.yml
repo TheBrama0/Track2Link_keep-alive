@@ -2,7 +2,7 @@ name: Keep Supabase Projects Alive
 
 on:
   schedule:
-    - cron: '0 9 * * *'   # Runs daily at 9:00 UTC
+    - cron: '0 9 * * *'   # daily at 9:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -11,13 +11,12 @@ jobs:
     strategy:
       matrix:
         project:
-          - name: Track2Link
-            ref: clfndnqtihioqheubzmx   # <-- REPLACE with your actual project ref
-            secret_name: sb_publishable_4DOkH5Ljp_tReIiIadWYDw_p7ksAg0v
-          - 
-          # Add more projects as needed
+          - name: Track2Link          # a friendly name
+            ref: clfndnqtihioqheubzmx # <-- your project ref (from URL)
+            secret_name: TRACK2LINK_ANON_KEY
+          # add more projects here if needed
     steps:
-      - name: Call ping_keep_alive for ${{ matrix.project.name }}
+      - name: Ping ${{ matrix.project.name }}
         run: |
           curl -X POST 'https://${{ matrix.project.ref }}.supabase.co/rest/v1/rpc/ping_keep_alive' \
                -H 'apikey: ${{ secrets[matrix.project.secret_name] }}' \
