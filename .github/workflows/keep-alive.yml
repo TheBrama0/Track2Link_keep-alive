@@ -2,7 +2,7 @@ name: Keep Supabase Projects Alive
 
 on:
   schedule:
-    - cron: '0 9 * * *'   # daily at 9:00 UTC
+    - cron: '0 9 * * *'
   workflow_dispatch:
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
       matrix:
         project:
           - name: Track2Link
-            ref: clfndnqtihioqheubzmx   # <-- your project ID (from Supabase URL)
+            ref: clfndnqtihioqheubzmx
             secret_name: TRACK2LINK_ANON_KEY
     steps:
       - name: Ping ${{ matrix.project.name }}
@@ -22,3 +22,20 @@ jobs:
                -H 'Authorization: Bearer ${{ secrets[matrix.project.secret_name] }}' \
                -H 'Content-Type: application/json' \
                -d '{}'
+
+      # After pinging, fetch the updated data and save as JSON
+      - name: Fetch status and save to JSON
+        run: |
+          curl -s -X GET 'https://${{ matrix.project.ref }}.supabase.co/rest/v1/keep_alive?select=last_ping,uptime_days' \
+               -H 'apikey: ${{ secrets[matrix.project.secret_name] }}' \
+               -H 'Authorization: Bearer ${{ secrets[matrix.project.secret_name] }}' \
+               | jq '.' > status.json
+
+      # Upload the JSON as an artifact (optional, but we'll commit it)
+      - name: Commit status.json to the repo
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add status.json
+          git commit -m "Update status.json [skip ci]" || exit 0   # skip if no changes
+          git push
