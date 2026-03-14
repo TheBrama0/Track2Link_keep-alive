@@ -12,6 +12,10 @@ jobs:
       matrix:
         project:
           - name: Track2Link v1.1
+            ref: clfndnqtihioqheubzmx
+            secret_name: TRACK2LINK_ANON_KEY_V1
+            
+          - name: Track2Link v1.1
             ref: xzcotxqdrhfzadlpbxwq
             secret_name: TRACK2LINK_ANON_KEY_V1_1
     steps:
