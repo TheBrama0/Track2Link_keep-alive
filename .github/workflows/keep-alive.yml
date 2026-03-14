@@ -8,40 +8,41 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project:
-          - name: Track2Link v1.1
-            ref: clfndnqtihioqheubzmx
-            secret_name: TRACK2LINK_ANON_KEY_v1
-            
-          - name: Track2Link v1.1
-            ref: xzcotxqdrhfzadlpbxwq
-            secret_name: TRACK2LINK_ANON_KEY_V1_1
     steps:
-      # 1. Checkout the repository so we can commit files
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Ping the keep-alive RPC
-      - name: Ping ${{ matrix.project.name }}
-        run: |
-          curl -X POST 'https://${{ matrix.project.ref }}.supabase.co/rest/v1/rpc/ping_keep_alive' \
-               -H 'apikey: ${{ secrets[matrix.project.secret_name] }}' \
-               -H 'Authorization: Bearer ${{ secrets[matrix.project.secret_name] }}' \
-               -H 'Content-Type: application/json' \
-               -d '{}'
-
-      # 3. Fetch the updated status and save as JSON in docs/data/
-      - name: Fetch status and save to JSON
+      - name: Process all projects
+        env:
+          # Define projects as a JSON array (you can expand this)
+          PROJECTS: |
+            [
+              {"name":"Track2Link v1.1 (xzcotx)","ref":"xzcotxqdrhfzadlpbxwq","secret":"TRACK2LINK_ANON_KEY_V1_1"},
+              {"name":"Track2Link v1.1 (clfndn)","ref":"clfndnqtihioqheubzmx","secret":"TRACK2LINK_ANON_KEY_v1"}
+            ]
         run: |
           mkdir -p docs/data
-          curl -s -X GET 'https://${{ matrix.project.ref }}.supabase.co/rest/v1/keep_alive?select=last_ping,uptime_days' \
-               -H 'apikey: ${{ secrets[matrix.project.secret_name] }}' \
-               -H 'Authorization: Bearer ${{ secrets[matrix.project.secret_name] }}' \
-               | jq '.' > docs/data/status.json
+          echo "$PROJECTS" | jq -c '.[]' | while read project; do
+            name=$(echo "$project" | jq -r '.name')
+            ref=$(echo "$project" | jq -r '.ref')
+            secret=$(echo "$project" | jq -r '.secret')
+            
+            # Ping
+            curl -X POST "https://${ref}.supabase.co/rest/v1/rpc/ping_keep_alive" \
+                 -H "apikey: ${{ secrets[secret] }}" \
+                 -H "Authorization: Bearer ${{ secrets[secret] }}" \
+                 -H "Content-Type: application/json" -d '{}'
+            
+            # Fetch status and append to temporary file (add project name)
+            curl -s -X GET "https://${ref}.supabase.co/rest/v1/keep_alive?select=last_ping,uptime_days" \
+                 -H "apikey: ${{ secrets[secret] }}" \
+                 -H "Authorization: Bearer ${{ secrets[secret] }}" \
+                 | jq --arg name "$name" '[.[] | . + {project: $name}]' >> all_status.json
+          done
 
-      # 4. Commit and push the updated JSON (only if changed)
+          # Move final combined JSON to docs/data
+          mv all_status.json docs/data/status.json
+
       - name: Commit and push status.json
         run: |
           git config --global user.name "github-actions[bot]"
