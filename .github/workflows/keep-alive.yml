@@ -14,8 +14,8 @@ jobs:
 
 
           - name: Track2Link v1.1
-            ref: TRACK2LINK_PROJECT_URL_v1_1
-            secret_name: TRACK2LINK_ANON_KEY_v1_1
+            ref: xzcotxqdrhfzadlpbxwq
+            secret_name: TRACK2LINK_ANON_KEY_V1_1
             
     steps:
       - name: Ping ${{ matrix.project.name }}
