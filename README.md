@@ -1,4 +1,4 @@
-# Supabase Keep‑Alive Monitor
+# Keep‑Alive Monitor
 
 This repository contains an automated **keep‑alive** system for Supabase projects on the free tier. It prevents projects from being paused due to inactivity by scheduling a daily ping and displays the status on a public GitHub Pages dashboard.
 
